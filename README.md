@@ -1,12 +1,12 @@
 # Reliability-Aware Star–Galaxy–Quasar Classification in SDSS DR17
 
-
-
 **Reliability-Aware Star–Galaxy–Quasar Classification in SDSS DR17: Feature Ablation, Magnitude Robustness, and Probability Calibration**
 
 Authors: Yunis Torun, Yiğit Ütük, and Serkan Akkoyun.
 
 Repository maintainer: Yunis Torun.
+
+Analysis and revision period represented in this repository: **17–24 August 2026**.
 
 ## Purpose
 
@@ -22,7 +22,7 @@ This repository contains the analysis code and reproducibility material used for
 - `06_grouped_permutation/` — grouped permutation importance.
 - `07_probability_calibration/` — raw, sigmoid, and isotonic probability calibration.
 - `08_prior_shift/` — class-prevalence and label-shift sensitivity analysis.
-- `tables/` —  tables used in the manuscript and supplement.
+- `tables/` — tables used in the manuscript and supplement.
 - `figures/` — revised figures.
 
 ## Core experimental design
@@ -36,7 +36,9 @@ Model and feature-configuration comparison is performed only within the developm
 
 ## Randomized SQL retrieval
 
-Class-specific sampling uses SQL-level randomization with `ORDER BY NEWID()` and applies `zWarning = 0`. Because `NEWID()` is not seedable, rerunning the same SQL query does not guarantee retrieval of the identical 150,000 objects. The exact SQL text and analysed object identifiers are archived here for exact reconstruction of the reported sample.
+Class-specific sampling uses SQL-level randomization with `ORDER BY NEWID()` and applies `zWarning = 0`. Because `NEWID()` is not seedable, rerunning the same SQL query does not guarantee retrieval of the identical 150,000 objects. The exact SQL text and analysed object identifiers are archived for exact reconstruction of the reported sample.
+
+The file-level SHA-256 checksums for the analysis scripts and archived sample files are listed in `FILE_MANIFEST_SHA256.csv`.
 
 ## Interpretation notes
 
