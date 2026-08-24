@@ -1,0 +1,111 @@
+SDSS DR17 reviewer-revision randomized sampling queries
+Sampling mechanism: ORDER BY NEWID()
+NOTE: NEWID() is random and not seedable; archive the resulting CSV and object IDs for exact reproducibility.
+
+
+-- GALAXY
+SELECT TOP 50000
+    p.objID                 AS objid,
+    p.ra                    AS ra,
+    p.dec                   AS dec,
+    p.u                     AS u,
+    p.g                     AS g,
+    p.r                     AS r,
+    p.i                     AS i,
+    p.z                     AS z,
+    p.Err_u                 AS err_u,
+    p.Err_g                 AS err_g,
+    p.Err_r                 AS err_r,
+    p.Err_i                 AS err_i,
+    p.Err_z                 AS err_z,
+    s.specObjID             AS specobjid,
+    s.class                 AS class,
+    s.z                     AS redshift,
+    s.zErr                  AS redshift_err,
+    s.plate                 AS plate,
+    s.mjd                   AS mjd,
+    s.fiberID               AS fiberid
+FROM PhotoObj AS p
+JOIN SpecObj AS s
+    ON s.bestObjID = p.objID
+WHERE
+    s.class = 'GALAXY'
+    AND s.zWarning = 0
+    AND p.u BETWEEN 0 AND 35
+    AND p.g BETWEEN 0 AND 35
+    AND p.r BETWEEN 0 AND 35
+    AND p.i BETWEEN 0 AND 35
+    AND p.z BETWEEN 0 AND 35
+ORDER BY NEWID()
+
+
+-- STAR
+SELECT TOP 50000
+    p.objID                 AS objid,
+    p.ra                    AS ra,
+    p.dec                   AS dec,
+    p.u                     AS u,
+    p.g                     AS g,
+    p.r                     AS r,
+    p.i                     AS i,
+    p.z                     AS z,
+    p.Err_u                 AS err_u,
+    p.Err_g                 AS err_g,
+    p.Err_r                 AS err_r,
+    p.Err_i                 AS err_i,
+    p.Err_z                 AS err_z,
+    s.specObjID             AS specobjid,
+    s.class                 AS class,
+    s.z                     AS redshift,
+    s.zErr                  AS redshift_err,
+    s.plate                 AS plate,
+    s.mjd                   AS mjd,
+    s.fiberID               AS fiberid
+FROM PhotoObj AS p
+JOIN SpecObj AS s
+    ON s.bestObjID = p.objID
+WHERE
+    s.class = 'STAR'
+    AND s.zWarning = 0
+    AND p.u BETWEEN 0 AND 35
+    AND p.g BETWEEN 0 AND 35
+    AND p.r BETWEEN 0 AND 35
+    AND p.i BETWEEN 0 AND 35
+    AND p.z BETWEEN 0 AND 35
+ORDER BY NEWID()
+
+
+-- QSO
+SELECT TOP 50000
+    p.objID                 AS objid,
+    p.ra                    AS ra,
+    p.dec                   AS dec,
+    p.u                     AS u,
+    p.g                     AS g,
+    p.r                     AS r,
+    p.i                     AS i,
+    p.z                     AS z,
+    p.Err_u                 AS err_u,
+    p.Err_g                 AS err_g,
+    p.Err_r                 AS err_r,
+    p.Err_i                 AS err_i,
+    p.Err_z                 AS err_z,
+    s.specObjID             AS specobjid,
+    s.class                 AS class,
+    s.z                     AS redshift,
+    s.zErr                  AS redshift_err,
+    s.plate                 AS plate,
+    s.mjd                   AS mjd,
+    s.fiberID               AS fiberid
+FROM PhotoObj AS p
+JOIN SpecObj AS s
+    ON s.bestObjID = p.objID
+WHERE
+    s.class = 'QSO'
+    AND s.zWarning = 0
+    AND p.u BETWEEN 0 AND 35
+    AND p.g BETWEEN 0 AND 35
+    AND p.r BETWEEN 0 AND 35
+    AND p.i BETWEEN 0 AND 35
+    AND p.z BETWEEN 0 AND 35
+ORDER BY NEWID()
