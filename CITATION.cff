@@ -1,0 +1,13 @@
+cff-version: 1.2.0
+title: "Reliability-Aware Star–Galaxy–Quasar Classification in SDSS DR17"
+message: "If you use this analysis code or data package, please cite the associated manuscript and this repository."
+type: software
+authors:
+  - family-names: Torun
+    given-names: Yunis
+  - family-names: Ütük
+    given-names: Yiğit
+  - family-names: Akkoyun
+    given-names: Serkan
+repository-code: "https://github.com/torunyunus/Reliability_Aware_Star_Galaxy_Quasar_Classification_in_SDSS_DR17-"
+date-released: 2026-08-24
