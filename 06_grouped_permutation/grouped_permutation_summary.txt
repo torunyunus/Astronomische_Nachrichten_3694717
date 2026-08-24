@@ -1,0 +1,26 @@
+SDSS DR17 GROUPED PERMUTATION IMPORTANCE SUMMARY
+==============================================================================
+
+IMPORTANT: Exact saved step1 models were used; no model was refitted.
+
+Model consistency check:
+- F4: PASS
+- F7: PASS
+
+Baseline untouched final-test metrics:
+- F4 / Random Forest: macro-F1=0.894601, accuracy=0.894800, MCC=0.842409, AUC=0.978396
+- F7 / LightGBM: macro-F1=0.985098, accuracy=0.985100, MCC=0.977699, AUC=0.998697
+
+Grouped permutation importance (Delta macro-F1):
+- F4 / Magnitude group: mean=+0.154273 ± 0.001865, 95% permutation interval=[+0.150894, +0.158135], positive in 100.0% of repeats
+- F4 / Color group: mean=+0.530063 ± 0.002726, 95% permutation interval=[+0.524482, +0.534035], positive in 100.0% of repeats
+- F4 / Photometric block: mean=+0.561602 ± 0.002579, 95% permutation interval=[+0.557431, +0.566800], positive in 100.0% of repeats
+- F7 / Magnitude group: mean=+0.015735 ± 0.000592, 95% permutation interval=[+0.014553, +0.016856], positive in 100.0% of repeats
+- F7 / Color group: mean=+0.094727 ± 0.001232, 95% permutation interval=[+0.092276, +0.097034], positive in 100.0% of repeats
+- F7 / Photometric block: mean=+0.131941 ± 0.001588, 95% permutation interval=[+0.129132, +0.135255], positive in 100.0% of repeats
+- F7 / Redshift: mean=+0.583573 ± 0.002434, 95% permutation interval=[+0.579428, +0.588380], positive in 100.0% of repeats
+
+Interpretation notes:
+- Magnitude-group and Color-group permutation effects are conditional on the complementary photometric representation remaining available.
+- The Photometric-block result jointly permutes all 12 photometric features and therefore captures the loss of the full photometric block.
+- In F7, Redshift importance is conditional on this spectroscopically selected SDSS sample and does not imply redshift availability in purely photometric catalogues.
