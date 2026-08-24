@@ -1,0 +1,16 @@
+{
+  "F4 Mag+Colors": {
+    "model": "Random Forest",
+    "cv_macro_f1_mean": 0.8953767011926685,
+    "cv_macro_f1_sd": 0.0017365989660933208,
+    "cv_macro_f1_ci95_low": 0.8944150047401455,
+    "cv_macro_f1_ci95_high": 0.8963383976451916
+  },
+  "F7 Full": {
+    "model": "LightGBM",
+    "cv_macro_f1_mean": 0.9848276348109919,
+    "cv_macro_f1_sd": 0.00036294964993223715,
+    "cv_macro_f1_ci95_low": 0.984626639994342,
+    "cv_macro_f1_ci95_high": 0.9850286296276418
+  }
+}
