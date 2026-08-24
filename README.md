@@ -38,7 +38,7 @@ Model and feature-configuration comparison is performed only within the developm
 
 Class-specific sampling uses SQL-level randomization with `ORDER BY NEWID()` and applies `zWarning = 0`. Because `NEWID()` is not seedable, rerunning the same SQL query does not guarantee retrieval of the identical 150,000 objects. The exact SQL text is included in this repository. For exact numerical reconstruction, the analysed object-identifier table and combined randomized source table should be deposited with the repository or its associated data archive; the expected filenames and contents are described in `01_data_retrieval/DATA_ARCHIVE.md`.
 
-The file-level SHA-256 checksums available for the analysis files are listed in `FILE_MANIFEST_SHA256.csv`.
+SHA-256 checksums for the two analysis data files are listed in `01_data_retrieval/DATA_FILE_SHA256.csv`.
 
 ## Interpretation notes
 
