@@ -20,19 +20,19 @@
     "GALAXY": {
       "raw_rows": 50000,
       "clean_rows": 50000,
-      "class_csv": "sdss_dr17_revision_random\\sdss_dr17_random_galaxy.csv"
+      "class_csv": "sdss_dr17_random_sample\\sdss_dr17_random_galaxy.csv"
     },
     "STAR": {
       "raw_rows": 50000,
       "clean_rows": 50000,
-      "class_csv": "sdss_dr17_revision_random\\sdss_dr17_random_star.csv"
+      "class_csv": "sdss_dr17_random_sample\\sdss_dr17_random_star.csv"
     },
     "QSO": {
       "raw_rows": 50000,
       "clean_rows": 50000,
-      "class_csv": "sdss_dr17_revision_random\\sdss_dr17_random_qso.csv"
+      "class_csv": "sdss_dr17_random_sample\\sdss_dr17_random_qso.csv"
     }
   },
-  "final_csv": "sdss_dr17_revision_random\\sdss_dr17_randomized_150k.csv",
-  "sql_query_log": "sdss_dr17_revision_random\\sql_queries_used.txt"
+  "final_csv": "sdss_dr17_random_sample\\sdss_dr17_randomized_150k.csv",
+  "sql_query_log": "sdss_dr17_random_sample\\sql_queries_used.txt"
 }
