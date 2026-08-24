@@ -23,7 +23,7 @@ This repository contains the analysis code and reproducibility material used for
 - `07_probability_calibration/` — raw, sigmoid, and isotonic probability calibration.
 - `08_prior_shift/` — class-prevalence and label-shift sensitivity analysis.
 - `tables/` — tables used in the manuscript and supplement.
-- `figures/` — revised figures.
+- `figures/` — figures.
 
 ## Core experimental design
 
