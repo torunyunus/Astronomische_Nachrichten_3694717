@@ -66,4 +66,4 @@ Core dependencies are listed in `requirements-core.txt`. Reference versions are 
 
 ## Citation
 
-A DOI/citation entry can be added after repository archival.
+A DOI/citation entry will be added after repository archival.
