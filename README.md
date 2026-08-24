@@ -14,7 +14,7 @@ This repository contains the analysis code and reproducibility material for the 
 
 ## Repository structure
 
-- `01_data_retrieval/` — randomized SDSS DR17 retrieval, exact SQL, sample metadata, and data-archive notes.
+- `01_data_retrieval/` — randomized SDSS DR17 retrieval, exact SQL, sample metadata, checksums, and data-archive notes.
 - `02_validation/` — repeated stratified development validation and untouched final-test evaluation.
 - `03_spatial_validation/` — spatially disjoint RA-region validation.
 - `04_magnitude_robustness/` — magnitude-dependent robustness analysis.
@@ -22,8 +22,10 @@ This repository contains the analysis code and reproducibility material for the 
 - `06_grouped_permutation/` — grouped permutation importance.
 - `07_probability_calibration/` — raw, sigmoid, and isotonic probability calibration.
 - `08_prior_shift/` — class-prevalence and label-shift sensitivity analysis.
-- `tables/` — tables used in the manuscript and supplementary material.
-- `figures/` — figure-generation code.
+- `tables/` — machine-readable principal tables.
+- `supplementary/` — machine-readable supplementary analysis tables.
+- `figures/` — code for reproducing the principal and supplementary figures.
+- `environment/` — environment-export utility and pinned reference dependencies.
 
 ## Core experimental design
 
@@ -33,6 +35,8 @@ Model and feature-configuration comparison is performed only within the developm
 
 - **F4 Random Forest** — redshift-free photometric configuration (magnitudes + colours).
 - **F7 LightGBM** — full spectroscopic-reference configuration (magnitudes + colours + spectroscopic redshift).
+
+The detailed experimental protocol is documented in `ANALYSIS_PROTOCOL.md`.
 
 ## Randomized SQL retrieval
 
@@ -49,7 +53,7 @@ SHA-256 checksums for the two analysis data files are listed in `01_data_retriev
 
 ## Software environment
 
-Core dependencies are listed in `requirements-core.txt`. The PowerShell utility in `environment/export_environment.ps1` records the exact installed package versions and Conda environment from the analysis computer.
+Core dependencies are listed in `requirements-core.txt`. Pinned reference versions are provided in `environment/requirements-reference.txt` and described in `environment/REFERENCE_ENVIRONMENT.md`. The PowerShell utility in `environment/export_environment.ps1` records the installed package versions and Conda environment directly from the analysis computer.
 
 ## Execution
 
