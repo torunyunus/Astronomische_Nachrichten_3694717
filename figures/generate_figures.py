@@ -114,10 +114,10 @@ def figure_5():
     path = ROOT / "tables" / "Table_7_grouped_permutation_importance.csv"
     df = pd.read_csv(path)
 
-    value_col = next(c for c in df.columns if "mean" in c.lower() and "macro" in c.lower())
-    sd_col = next(c for c in df.columns if "sd" in c.lower() and "macro" in c.lower())
-    config_col = next(c for c in df.columns if "feature" in c.lower() or "configuration" in c.lower())
-    group_col = next(c for c in df.columns if c.lower() == "group")
+    config_col = "Feature configuration"
+    group_col = "Feature group"
+    value_col = "ΔMacro-F1 mean"
+    sd_col = "SD"
 
     fig, ax = plt.subplots(figsize=(10, 5.6))
     labels = [f"{r[config_col]}: {r[group_col]}" for _, r in df.iterrows()]
