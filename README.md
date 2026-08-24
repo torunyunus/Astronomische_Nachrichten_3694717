@@ -14,7 +14,7 @@ This repository contains the analysis code and reproducibility material for the 
 
 ## Repository structure
 
-- `01_data_retrieval/` — randomized SDSS DR17 retrieval, exact SQL, sample metadata, and object identifiers.
+- `01_data_retrieval/` — randomized SDSS DR17 retrieval, exact SQL, sample metadata, and data-archive notes.
 - `02_validation/` — repeated stratified development validation and untouched final-test evaluation.
 - `03_spatial_validation/` — spatially disjoint RA-region validation.
 - `04_magnitude_robustness/` — magnitude-dependent robustness analysis.
@@ -23,7 +23,7 @@ This repository contains the analysis code and reproducibility material for the 
 - `07_probability_calibration/` — raw, sigmoid, and isotonic probability calibration.
 - `08_prior_shift/` — class-prevalence and label-shift sensitivity analysis.
 - `tables/` — tables used in the manuscript and supplementary material.
-- `figures/` — scientific figures used in the analysis.
+- `figures/` — figure-generation code.
 
 ## Core experimental design
 
@@ -36,9 +36,9 @@ Model and feature-configuration comparison is performed only within the developm
 
 ## Randomized SQL retrieval
 
-Class-specific sampling uses SQL-level randomization with `ORDER BY NEWID()` and applies `zWarning = 0`. Because `NEWID()` is not seedable, rerunning the same SQL query does not guarantee retrieval of the identical 150,000 objects. The exact SQL text and analysed object identifiers are archived for exact reconstruction of the reported sample.
+Class-specific sampling uses SQL-level randomization with `ORDER BY NEWID()` and applies `zWarning = 0`. Because `NEWID()` is not seedable, rerunning the same SQL query does not guarantee retrieval of the identical 150,000 objects. The exact SQL text is included in this repository. For exact numerical reconstruction, the analysed object-identifier table and combined randomized source table should be deposited with the repository or its associated data archive; the expected filenames and contents are described in `01_data_retrieval/DATA_ARCHIVE.md`.
 
-The file-level SHA-256 checksums for the analysis scripts and archived sample files are listed in `FILE_MANIFEST_SHA256.csv`.
+The file-level SHA-256 checksums available for the analysis files are listed in `FILE_MANIFEST_SHA256.csv`.
 
 ## Interpretation notes
 
@@ -49,7 +49,11 @@ The file-level SHA-256 checksums for the analysis scripts and archived sample fi
 
 ## Software environment
 
-Exact software versions used for the analysis are archived in `requirements.txt` and/or `environment.yml` when available from the execution environment.
+Core dependencies are listed in `requirements-core.txt`. The PowerShell utility in `environment/export_environment.ps1` records the exact installed package versions and Conda environment from the analysis computer.
+
+## Execution
+
+`RUN_ORDER.md` lists the commands for the complete analysis workflow. Figure-generation code is available in `figures/generate_figures.py`.
 
 ## Citation
 
