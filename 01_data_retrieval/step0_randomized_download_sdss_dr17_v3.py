@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Maintainer: Yunis Torun
+# Maintainer: Yunis Torun ytorun@cumhuriyet.edu.tr
 """
 step0_randomized_download_sdss_dr17.py
 
