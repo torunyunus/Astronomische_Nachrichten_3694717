@@ -1,0 +1,38 @@
+{
+  "skyserver_endpoint": "https://skyserver.sdss.org/dr17/SkyServerWS/SearchTools/SqlSearch",
+  "rows_per_class_requested": 50000,
+  "classes": ["GALAXY", "STAR", "QSO"],
+  "sql_sampling": "ORDER BY NEWID()",
+  "python_shuffle_random_state": 42,
+  "sql_magnitude_constraint": "BETWEEN 0 AND 35",
+  "python_magnitude_constraint": "0 < m < 35",
+  "quality_constraint": "s.zWarning = 0",
+  "photometric_uncertainties_downloaded": ["err_u", "err_g", "err_r", "err_i", "err_z"],
+  "redshift_uncertainty_downloaded": "redshift_err",
+  "final_rows": 150000,
+  "final_class_counts": {
+    "GALAXY": 50000,
+    "STAR": 50000,
+    "QSO": 50000
+  },
+  "cross_class_duplicate_rows_detected": 0,
+  "class_downloads": {
+    "GALAXY": {
+      "raw_rows": 50000,
+      "clean_rows": 50000,
+      "class_csv": "sdss_dr17_revision_random\\sdss_dr17_random_galaxy.csv"
+    },
+    "STAR": {
+      "raw_rows": 50000,
+      "clean_rows": 50000,
+      "class_csv": "sdss_dr17_revision_random\\sdss_dr17_random_star.csv"
+    },
+    "QSO": {
+      "raw_rows": 50000,
+      "clean_rows": 50000,
+      "class_csv": "sdss_dr17_revision_random\\sdss_dr17_random_qso.csv"
+    }
+  },
+  "final_csv": "sdss_dr17_revision_random\\sdss_dr17_randomized_150k.csv",
+  "sql_query_log": "sdss_dr17_revision_random\\sql_queries_used.txt"
+}
