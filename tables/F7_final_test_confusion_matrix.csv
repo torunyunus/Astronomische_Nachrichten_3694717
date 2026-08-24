@@ -1,0 +1,4 @@
+,pred_GALAXY,pred_STAR,pred_QSO
+true_GALAXY,9861,8,131
+true_STAR,1,9999,0
+true_QSO,307,0,9693
