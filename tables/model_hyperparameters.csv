@@ -1,0 +1,28 @@
+model,parameter,value
+Logistic Regression,scaling,StandardScaler
+Logistic Regression,multiclass_strategy,One-vs-Rest
+Logistic Regression,solver,liblinear
+Logistic Regression,max_iter,1000
+Logistic Regression,class_weight,balanced
+Logistic Regression,random_state,42
+Decision Tree,min_samples_leaf,5
+Decision Tree,class_weight,balanced
+Decision Tree,random_state,42
+GaussianNB,scaling,StandardScaler
+Random Forest,n_estimators,200
+Random Forest,min_samples_leaf,3
+Random Forest,class_weight,balanced
+Random Forest,random_state,42
+Random Forest,n_jobs,-1
+LightGBM,objective,multiclass
+LightGBM,n_estimators,300
+LightGBM,learning_rate,0.03
+LightGBM,num_leaves,31
+LightGBM,max_depth,-1
+LightGBM,subsample,0.90
+LightGBM,colsample_bytree,0.90
+LightGBM,reg_alpha,0.10
+LightGBM,reg_lambda,1.00
+LightGBM,class_weight,balanced
+LightGBM,random_state,42
+LightGBM,n_jobs,-1
