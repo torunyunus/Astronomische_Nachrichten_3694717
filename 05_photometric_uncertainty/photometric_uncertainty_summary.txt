@@ -1,0 +1,42 @@
+SDSS DR17 PHOTOMETRIC-UNCERTAINTY ROBUSTNESS SUMMARY
+==============================================================================
+
+IMPORTANT: Exact saved step1 models were used; no model was refitted.
+
+Model consistency check:
+- F4: PASS
+- F7: PASS
+
+Valid positive finite Err_r: 30,000/30,000 (100.00%)
+
+Overall untouched final-test metrics:
+- F4 / Random Forest: macro-F1=0.894601, accuracy=0.894800, recall G/S/Q=0.9194/0.8575/0.9075
+- F7 / LightGBM: macro-F1=0.985098, accuracy=0.985100, recall G/S/Q=0.9861/0.9999/0.9693
+
+r-band photometric-uncertainty descriptive statistics:
+- ALL: median r=19.9851, median Err_r=0.0244217 (IQR 0.00851268–0.0532497), median SNR_r~44.46
+- GALAXY: median r=19.8911, median Err_r=0.033851 (IQR 0.00826552–0.0664681), median SNR_r~32.07
+- STAR: median r=18.7410, median Err_r=0.00972655 (IQR 0.00547724–0.0280854), median SNR_r~111.63
+- QSO: median r=20.6189, median Err_r=0.0345177 (IQR 0.0195987–0.0571819), median SNR_r~31.45
+
+Overall Err_r tertiles:
+- F4 / Low: n=10000, median Err_r=0.00635385, median SNR_r~170.88, macro-F1=0.9537 [0.9484, 0.9586], STAR recall=0.9744 [0.9704, 0.9786]
+- F7 / Low: n=10000, median Err_r=0.00635385, median SNR_r~170.88, macro-F1=0.9890 [0.9862, 0.9918], STAR recall=0.9998 [0.9995, 1.0000]
+- F4 / Medium: n=10000, median Err_r=0.0244217, median SNR_r~44.46, macro-F1=0.8784 [0.8715, 0.8849], STAR recall=0.8133 [0.7982, 0.8280]
+- F7 / Medium: n=10000, median Err_r=0.0244217, median SNR_r~44.46, macro-F1=0.9884 [0.9863, 0.9904], STAR recall=1.0000 [1.0000, 1.0000]
+- F4 / High: n=10000, median Err_r=0.0682023, median SNR_r~15.92, macro-F1=0.7806 [0.7712, 0.7891], STAR recall=0.5246 [0.5003, 0.5470]
+- F7 / High: n=10000, median Err_r=0.0682023, median SNR_r~15.92, macro-F1=0.9779 [0.9753, 0.9804], STAR recall=1.0000 [1.0000, 1.0000]
+
+Joint magnitude x uncertainty: F4 STAR recall, Low vs High Err_r tertile
+- Q1: Low=0.9811 [0.9738, 0.9876] vs High=0.9724 [0.9554, 0.9852]
+- Q2: Low=0.9714 [0.9624, 0.9798] vs High=0.9468 [0.9259, 0.9653]
+- Q3: Low=0.9071 [0.8868, 0.9262] vs High=0.6460 [0.5841, 0.7080]
+- Q4: Low=0.7055 [0.6667, 0.7407] vs High=0.4653 [0.3960, 0.5347]
+- Q5: Low=0.3956 [0.3489, 0.4423] vs High=0.7224 [0.6760, 0.7661]
+
+TRUE STAR only: STAR recall, Low vs High Err_r tertile within each STAR magnitude quintile
+- STAR Q1: F4 Low/High=0.9820/0.9850; F7 Low/High=0.9985/1.0000
+- STAR Q2: F4 Low/High=0.9670/0.9700; F7 Low/High=1.0000/1.0000
+- STAR Q3: F4 Low/High=0.9715/0.9580; F7 Low/High=1.0000/1.0000
+- STAR Q4: F4 Low/High=0.9160/0.6757; F7 Low/High=1.0000/1.0000
+- STAR Q5: F4 Low/High=0.6432/0.6096; F7 Low/High=1.0000/1.0000
