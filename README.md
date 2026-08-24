@@ -22,8 +22,8 @@ This repository contains the analysis code and reproducibility material for the 
 - `06_grouped_permutation/` — grouped permutation importance.
 - `07_probability_calibration/` — raw, sigmoid, and isotonic probability calibration.
 - `08_prior_shift/` — class-prevalence and label-shift sensitivity analysis.
-- `tables/` — tables used in the manuscript and supplement.
-- `figures/` — figures.
+- `tables/` — tables used in the manuscript and supplementary material.
+- `figures/` — scientific figures used in the analysis.
 
 ## Core experimental design
 
@@ -49,8 +49,8 @@ The file-level SHA-256 checksums for the analysis scripts and archived sample fi
 
 ## Software environment
 
-Exact software versions used for the final analysis will be archived in `requirements.txt` and/or `environment.yml` before final submission.
+Exact software versions used for the analysis are archived in `requirements.txt` and/or `environment.yml` when available from the execution environment.
 
 ## Citation
 
-A DOI/citation entry will be added after archival of the repository for the final manuscript submission.
+A DOI/citation entry can be added after repository archival.
