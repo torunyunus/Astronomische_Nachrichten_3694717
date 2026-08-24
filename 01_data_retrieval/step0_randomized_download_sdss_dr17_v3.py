@@ -13,10 +13,6 @@ Replace the previous class-wise:
 sampling with SQL-level randomized sampling:
     SELECT TOP 50000 ... ORDER BY NEWID()
 
-The script also downloads SDSS photometric uncertainties
-(Err_u, Err_g, Err_r, Err_i, Err_z) for the reviewer-requested
-uncertainty analysis. These uncertainty columns are NOT automatically
-added to the original F1–F7 feature sets.
 
 Important
 ---------
