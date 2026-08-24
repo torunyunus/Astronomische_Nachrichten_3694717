@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import gzip
 import hashlib
 from pathlib import Path
 import pandas as pd
@@ -15,8 +16,18 @@ EXPECTED_COLUMNS = [
     "plate", "mjd", "fiberid",
 ]
 EXPECTED_COUNTS = {"GALAXY": 50000, "STAR": 50000, "QSO": 50000}
-EXPECTED_DATA_SHA256 = "c9c62ab3ec627d01e5da7dcba63a0f664ce37c027108bd3fe7a187923843bfe5"
-EXPECTED_IDS_SHA256 = "a74888197d77256ce332754047bc773cf8f7cf007699e0c7d5f832cfe5e12ed5"
+
+EXPECTED_HASHES = {
+    "sdss_dr17_randomized_150k.csv": "c9c62ab3ec627d01e5da7dcba63a0f664ce37c027108bd3fe7a187923843bfe5",
+    "sdss_dr17_randomized_150k.csv.gz": "32b55835601a3818b0e664436b4f3f4f50a168a32c09cf799322cef203602059",
+    "randomized_object_ids.csv": "a74888197d77256ce332754047bc773cf8f7cf007699e0c7d5f832cfe5e12ed5",
+    "randomized_object_ids.csv.gz": "14ffa9c0033aea398818303c56cd49ba7f1f1c29fbb4697cb9732226af665ffe",
+}
+
+EXPECTED_DECOMPRESSED_HASHES = {
+    "sdss_dr17_randomized_150k.csv.gz": EXPECTED_HASHES["sdss_dr17_randomized_150k.csv"],
+    "randomized_object_ids.csv.gz": EXPECTED_HASHES["randomized_object_ids.csv"],
+}
 
 
 def sha256(path: Path) -> str:
@@ -27,24 +38,43 @@ def sha256(path: Path) -> str:
     return h.hexdigest()
 
 
+def sha256_decompressed_gzip(path: Path) -> str:
+    h = hashlib.sha256()
+    with gzip.open(path, "rb") as f:
+        for block in iter(lambda: f.read(1024 * 1024), b""):
+            h.update(block)
+    return h.hexdigest()
+
+
+def verify_hash(path: Path) -> None:
+    expected = EXPECTED_HASHES.get(path.name)
+    if expected is None:
+        raise RuntimeError(f"Unrecognized archive filename: {path.name}")
+
+    actual = sha256(path)
+    print(f"{path.name} sha256:", actual)
+    if actual != expected:
+        raise RuntimeError(f"SHA-256 mismatch for {path.name}")
+
+    if path.suffix == ".gz":
+        expected_uncompressed = EXPECTED_DECOMPRESSED_HASHES[path.name]
+        actual_uncompressed = sha256_decompressed_gzip(path)
+        print(f"{path.name} decompressed sha256:", actual_uncompressed)
+        if actual_uncompressed != expected_uncompressed:
+            raise RuntimeError(f"Decompressed SHA-256 mismatch for {path.name}")
+
+
 def main() -> None:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--data", required=True, help="Path to sdss_dr17_randomized_150k.csv")
-    ap.add_argument("--ids", required=True, help="Path to randomized_object_ids.csv")
+    ap.add_argument("--data", required=True, help="Path to sdss_dr17_randomized_150k.csv or .csv.gz")
+    ap.add_argument("--ids", required=True, help="Path to randomized_object_ids.csv or .csv.gz")
     args = ap.parse_args()
 
     data_path = Path(args.data)
     ids_path = Path(args.ids)
 
-    data_hash = sha256(data_path)
-    ids_hash = sha256(ids_path)
-    print("data sha256:", data_hash)
-    print("ids  sha256:", ids_hash)
-
-    if data_hash != EXPECTED_DATA_SHA256:
-        raise RuntimeError("Analysis-table SHA-256 does not match the archived reference.")
-    if ids_hash != EXPECTED_IDS_SHA256:
-        raise RuntimeError("Identifier-table SHA-256 does not match the archived reference.")
+    verify_hash(data_path)
+    verify_hash(ids_path)
 
     df = pd.read_csv(data_path)
     ids = pd.read_csv(ids_path)
@@ -68,6 +98,12 @@ def main() -> None:
 
     if df["objid"].duplicated().any():
         raise RuntimeError("Duplicate objid values detected in the analysis table.")
+    if df["specobjid"].duplicated().any():
+        raise RuntimeError("Duplicate specobjid values detected in the analysis table.")
+
+    numeric = df.select_dtypes(include="number")
+    if numeric.isna().any().any():
+        raise RuntimeError("Missing numeric values detected in the analysis table.")
 
     a = df[["objid", "specobjid", "class"]].copy()
     b = ids[["objid", "specobjid", "class"]].copy()
