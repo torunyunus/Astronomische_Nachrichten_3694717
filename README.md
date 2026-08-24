@@ -14,7 +14,7 @@ This repository contains the analysis code and reproducibility material for the 
 
 ## Repository structure
 
-- `01_data_retrieval/` — randomized SDSS DR17 retrieval, exact SQL, sample metadata, checksums, and data-archive notes.
+- `01_data_retrieval/` — randomized SDSS DR17 retrieval, exact SQL, archived analysis data, metadata, checksums, and data documentation.
 - `02_validation/` — repeated stratified development validation and untouched final-test evaluation.
 - `03_spatial_validation/` — spatially disjoint RA-region validation.
 - `04_magnitude_robustness/` — magnitude-dependent robustness analysis.
@@ -25,7 +25,7 @@ This repository contains the analysis code and reproducibility material for the 
 - `tables/` — machine-readable principal tables.
 - `supplementary/` — machine-readable supplementary analysis tables.
 - `figures/` — code for reproducing the principal and supplementary figures.
-- `environment/` — environment-export utility and pinned reference dependencies.
+- `environment/` — environment-export utility and reference dependency information.
 
 ## Core experimental design
 
@@ -38,11 +38,16 @@ Model and feature-configuration comparison is performed only within the developm
 
 The detailed experimental protocol is documented in `ANALYSIS_PROTOCOL.md`.
 
-## Randomized SQL retrieval
+## Randomized SQL retrieval and archived sample
 
-Class-specific sampling uses SQL-level randomization with `ORDER BY NEWID()` and applies `zWarning = 0`. Because `NEWID()` is not seedable, rerunning the same SQL query does not guarantee retrieval of the identical 150,000 objects. The exact SQL text is included in this repository. For exact numerical reconstruction, the analysed object-identifier table and combined randomized source table should be deposited with the repository or its associated data archive; the expected filenames and contents are described in `01_data_retrieval/DATA_ARCHIVE.md`.
+Class-specific sampling uses SQL-level randomization with `ORDER BY NEWID()` and applies `zWarning = 0`. Because `NEWID()` is not seedable, rerunning the same SQL query does not guarantee retrieval of the identical 150,000 objects. The exact SQL text is included in this repository.
 
-SHA-256 checksums for the two analysis data files are listed in `01_data_retrieval/DATA_FILE_SHA256.csv`.
+For exact numerical reconstruction, the analysed sample is archived in compressed form:
+
+- `01_data_retrieval/data/randomized_object_ids.csv.gz`
+- `01_data_retrieval/data/sdss_dr17_randomized_150k.csv.gz`
+
+SHA-256 checksums for both compressed and uncompressed forms are listed in `01_data_retrieval/DATA_FILE_SHA256.csv`. The archive can be checked with `01_data_retrieval/validate_data_archive.py`.
 
 ## Interpretation notes
 
@@ -53,11 +58,11 @@ SHA-256 checksums for the two analysis data files are listed in `01_data_retriev
 
 ## Software environment
 
-Core dependencies are listed in `requirements-core.txt`. Pinned reference versions are provided in `environment/requirements-reference.txt` and described in `environment/REFERENCE_ENVIRONMENT.md`. The PowerShell utility in `environment/export_environment.ps1` records the installed package versions and Conda environment directly from the analysis computer.
+Core dependencies are listed in `requirements-core.txt`. Reference versions are provided in `environment/requirements-reference.txt` and described in `environment/REFERENCE_ENVIRONMENT.md`. The PowerShell utility in `environment/export_environment.ps1` records the installed package versions and Conda environment directly from the analysis computer.
 
 ## Execution
 
-`RUN_ORDER.md` lists the commands for the complete analysis workflow. Figure-generation code is available in `figures/generate_figures.py`.
+`RUN_ORDER.md` lists the commands for the complete analysis workflow. The archived `.csv.gz` files can be read directly by the analysis scripts. Figure-generation code is available in `figures/generate_figures.py`.
 
 ## Citation
 
