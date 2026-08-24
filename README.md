@@ -1,6 +1,6 @@
 # Reliability-Aware Star–Galaxy–Quasar Classification in SDSS DR17
 
-Reproducibility repository for the revised manuscript:
+
 
 **Reliability-Aware Star–Galaxy–Quasar Classification in SDSS DR17: Feature Ablation, Magnitude Robustness, and Probability Calibration**
 
@@ -22,7 +22,7 @@ This repository contains the analysis code and reproducibility material used for
 - `06_grouped_permutation/` — grouped permutation importance.
 - `07_probability_calibration/` — raw, sigmoid, and isotonic probability calibration.
 - `08_prior_shift/` — class-prevalence and label-shift sensitivity analysis.
-- `tables/` — machine-readable tables used in the revised manuscript and supplement.
+- `tables/` —  tables used in the manuscript and supplement.
 - `figures/` — revised figures.
 
 ## Core experimental design
