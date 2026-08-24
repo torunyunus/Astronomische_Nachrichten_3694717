@@ -1,0 +1,15 @@
+{
+  "analysis": "spatially disjoint held-out validation",
+  "dataset": "sdss_dr17_randomized_150k.csv",
+  "fixed_split_assignment": "validation_framework/split_assignment.csv",
+  "development_n": 120000,
+  "untouched_final_test_used": false,
+  "region_definition": "Development-set sources were sorted by right ascension (RA) and partitioned into five approximately equal-count, non-overlapping RA regions. Class labels were not used to construct the spatial regions.",
+  "n_regions": 5,
+  "models": {
+    "F4": "Random Forest, selected previously using development repeated CV",
+    "F7": "LightGBM, selected previously using development repeated CV"
+  },
+  "evaluation_rule": "Each complete RA region was held out once. The classifier was fitted on the remaining development regions and evaluated on the spatially disjoint held-out region.",
+  "random_state": 42
+}
