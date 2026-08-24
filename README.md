@@ -6,11 +6,11 @@ Authors: Yunis Torun, Yiğit Ütük, and Serkan Akkoyun.
 
 Repository maintainer: Yunis Torun.
 
-Analysis and revision period represented in this repository: **17–24 August 2026**.
+Analysis period represented in this repository: **17–24 August 2026**.
 
 ## Purpose
 
-This repository contains the analysis code and reproducibility material used for the revised SDSS DR17 star–galaxy–quasar classification study. The revision uses a randomized, class-balanced sample of 150,000 spectroscopically labelled SDSS DR17 sources (50,000 GALAXY, 50,000 STAR, and 50,000 QSO objects).
+This repository contains the analysis code and reproducibility material for the SDSS DR17 star–galaxy–quasar classification study. The analysis uses a randomized, class-balanced sample of 150,000 spectroscopically labelled SDSS DR17 sources (50,000 GALAXY, 50,000 STAR, and 50,000 QSO objects).
 
 ## Repository structure
 
