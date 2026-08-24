@@ -1,0 +1,173 @@
+# Maintainer: Yunis Torun
+# Analysis period: 17-24 August 2026
+
+from __future__ import annotations
+
+import argparse
+from pathlib import Path
+import numpy as np
+import pandas as pd
+from sklearn.metrics import accuracy_score, f1_score, matthews_corrcoef, recall_score, roc_auc_score
+from sklearn.model_selection import train_test_split
+
+from analysis_common import RANDOM_STATE, LABEL_MAP, prepare_dataframe, make_model
+
+
+def equal_count_bins(values, n_bins=5):
+    order = np.argsort(np.asarray(values), kind="mergesort")
+    out = np.empty(len(order), dtype=int)
+    for bid, idx in enumerate(np.array_split(order, n_bins), start=1):
+        out[idx] = bid
+    return out
+
+
+def bootstrap_multiclass(y, pred, n_boot=2000, seed=42):
+    rng = np.random.default_rng(seed)
+    classes = np.unique(y)
+    idx_by_class = {c: np.flatnonzero(y == c) for c in classes}
+    rows = []
+    for _ in range(n_boot):
+        idx = np.concatenate([
+            rng.choice(idx_by_class[c], size=len(idx_by_class[c]), replace=True)
+            for c in classes
+        ])
+        yt, yp = y[idx], pred[idx]
+        rec = recall_score(yt, yp, labels=[0, 1, 2], average=None, zero_division=0)
+        rows.append([
+            accuracy_score(yt, yp),
+            f1_score(yt, yp, average="macro", zero_division=0),
+            matthews_corrcoef(yt, yp),
+            rec[0], rec[1], rec[2],
+        ])
+    a = np.asarray(rows)
+    lo = np.quantile(a, 0.025, axis=0)
+    hi = np.quantile(a, 0.975, axis=0)
+    return lo, hi
+
+
+def binary_recall_ci(correct, n_boot=2000, seed=42):
+    rng = np.random.default_rng(seed)
+    correct = np.asarray(correct, dtype=float)
+    vals = np.empty(n_boot)
+    for b in range(n_boot):
+        vals[b] = rng.choice(correct, size=len(correct), replace=True).mean()
+    return float(np.quantile(vals, 0.025)), float(np.quantile(vals, 0.975))
+
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--data", required=True)
+    ap.add_argument("--out", default="magnitude_robustness_output")
+    ap.add_argument("--bootstrap", type=int, default=2000)
+    args = ap.parse_args()
+
+    out = Path(args.out)
+    out.mkdir(parents=True, exist_ok=True)
+
+    df, fs = prepare_dataframe(pd.read_csv(args.data))
+    dev, test = train_test_split(
+        df, test_size=0.20, stratify=df["target"], random_state=RANDOM_STATE
+    )
+    dev = dev.reset_index(drop=True)
+    test = test.reset_index(drop=True)
+    test["r_bin_id"] = equal_count_bins(test["r"].to_numpy(), 5)
+
+    selected = {
+        "F4": ("F4 Mag+Colors", "Random Forest"),
+        "F7": ("F7 Full", "LightGBM"),
+    }
+    overall_rows = []
+    class_rows = []
+
+    for tag, (fs_name, model_name) in selected.items():
+        model = make_model(model_name)
+        model.fit(dev[fs[fs_name]].to_numpy(dtype=float), dev["target"].to_numpy())
+        pred_all = model.predict(test[fs[fs_name]].to_numpy(dtype=float))
+        proba_all = model.predict_proba(test[fs[fs_name]].to_numpy(dtype=float))
+
+        for bid in range(1, 6):
+            m = test["r_bin_id"].eq(bid).to_numpy()
+            d = test.loc[m]
+            y = d["target"].to_numpy()
+            pred = pred_all[m]
+            proba = proba_all[m]
+            rec = recall_score(y, pred, labels=[0, 1, 2], average=None, zero_division=0)
+            lo, hi = bootstrap_multiclass(
+                y, pred, n_boot=args.bootstrap, seed=RANDOM_STATE + bid + (100 if tag == "F7" else 0)
+            )
+            counts = d["class"].value_counts()
+            overall_rows.append({
+                "feature_configuration": tag,
+                "model": model_name,
+                "r_bin_id": bid,
+                "r_bin": f"Q{bid}",
+                "n": len(d),
+                "r_min": d["r"].min(),
+                "r_max": d["r"].max(),
+                "r_mean": d["r"].mean(),
+                "r_median": d["r"].median(),
+                "galaxy_n": int(counts.get("GALAXY", 0)),
+                "star_n": int(counts.get("STAR", 0)),
+                "qso_n": int(counts.get("QSO", 0)),
+                "accuracy": accuracy_score(y, pred),
+                "macro_f1": f1_score(y, pred, average="macro", zero_division=0),
+                "mcc": matthews_corrcoef(y, pred),
+                "auc_macro_ovr": roc_auc_score(y, proba, multi_class="ovr", average="macro"),
+                "recall_galaxy": rec[0],
+                "recall_star": rec[1],
+                "recall_qso": rec[2],
+                "accuracy_ci95_low": lo[0],
+                "accuracy_ci95_high": hi[0],
+                "macro_f1_ci95_low": lo[1],
+                "macro_f1_ci95_high": hi[1],
+                "mcc_ci95_low": lo[2],
+                "mcc_ci95_high": hi[2],
+                "recall_galaxy_ci95_low": lo[3],
+                "recall_galaxy_ci95_high": hi[3],
+                "recall_star_ci95_low": lo[4],
+                "recall_star_ci95_high": hi[4],
+                "recall_qso_ci95_low": lo[5],
+                "recall_qso_ci95_high": hi[5],
+            })
+
+        for class_name, class_id in LABEL_MAP.items():
+            dc = test[test["target"].eq(class_id)].copy().reset_index()
+            dc["class_r_bin_id"] = equal_count_bins(dc["r"].to_numpy(), 5)
+            for bid in range(1, 6):
+                m = dc["class_r_bin_id"].eq(bid).to_numpy()
+                idx = dc.loc[m, "index"].to_numpy(dtype=int)
+                correct = (pred_all[idx] == class_id).astype(float)
+                lo, hi = binary_recall_ci(
+                    correct, n_boot=args.bootstrap,
+                    seed=RANDOM_STATE + class_id * 10 + bid + (100 if tag == "F7" else 0),
+                )
+                d = dc.loc[m]
+                class_rows.append({
+                    "feature_configuration": tag,
+                    "model": model_name,
+                    "true_class": class_name,
+                    "class_r_bin_id": bid,
+                    "class_r_bin": f"Q{bid}",
+                    "n": len(d),
+                    "r_min": d["r"].min(),
+                    "r_max": d["r"].max(),
+                    "r_mean": d["r"].mean(),
+                    "r_median": d["r"].median(),
+                    "recall": correct.mean(),
+                    "recall_ci95_low": lo,
+                    "recall_ci95_high": hi,
+                })
+
+    pd.DataFrame(overall_rows).to_csv(out / "magnitude_bin_results.csv", index=False)
+    pd.DataFrame(class_rows).to_csv(out / "class_conditional_recall_results.csv", index=False)
+
+    bins = (
+        test.groupby("r_bin_id", as_index=False)
+        .agg(n=("r", "size"), r_min=("r", "min"), r_max=("r", "max"), r_mean=("r", "mean"), r_median=("r", "median"))
+    )
+    bins["r_bin"] = "Q" + bins["r_bin_id"].astype(str)
+    bins.to_csv(out / "magnitude_bin_definition.csv", index=False)
+
+
+if __name__ == "__main__":
+    main()
