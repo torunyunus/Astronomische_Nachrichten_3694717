@@ -6,7 +6,7 @@ Authors: Yunis Torun, Yiğit Ütük, and Serkan Akkoyun.
 
 Repository maintainer: Yunis Torun.
 
-Analysis period represented in this repository: **17–24 August 2026**.
+
 
 ## Purpose
 
