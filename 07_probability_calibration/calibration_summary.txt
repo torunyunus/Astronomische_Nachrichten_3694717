@@ -1,0 +1,21 @@
+SDSS DR17 PROBABILITY CALIBRATION SUMMARY
+==============================================================================
+
+Calibration mappings were fitted exclusively from 5-fold out-of-fold development predictions. The untouched final test set was not used to fit calibration mappings.
+
+Exact raw-model consistency:
+- F4: PASS
+- F7: PASS
+
+F4 calibration results:
+- Raw: log loss=0.287717 [0.277614, 0.298042], Brier=0.154610 [0.150722, 0.158507], ECE15=0.010393 [0.008116, 0.013467], ECE10=0.010393, ECE20=0.010393, macro-F1=0.894601
+- Sigmoid: log loss=0.279309 [0.271451, 0.286797], Brier=0.154332 [0.150363, 0.158320], ECE15=0.004291 [0.003559, 0.008371], ECE10=0.004022, ECE20=0.005641, macro-F1=0.894513
+- Isotonic: log loss=0.275582 [0.268403, 0.282422], Brier=0.154310 [0.150222, 0.158389], ECE15=0.004872 [0.004021, 0.008958], ECE10=0.003829, ECE20=0.004374, macro-F1=0.894109
+
+F7 calibration results:
+- Raw: log loss=0.045746 [0.042324, 0.049211], Brier=0.024071 [0.022138, 0.026000], ECE15=0.001717 [0.001257, 0.003202], ECE10=0.000378, ECE20=0.001258, macro-F1=0.985098
+- Sigmoid: log loss=0.045717 [0.042323, 0.049133], Brier=0.024063 [0.022139, 0.025988], ECE15=0.001811 [0.001219, 0.003251], ECE10=0.000373, ECE20=0.001298, macro-F1=0.985098
+- Isotonic: log loss=0.046620 [0.042582, 0.051022], Brier=0.024115 [0.022182, 0.026030], ECE15=0.001942 [0.001278, 0.003395], ECE10=0.000588, ECE20=0.001558, macro-F1=0.985031
+
+Interpretation reminder: lower log loss, Brier score, and ECE indicate better probability reliability. ECE is bin-dependent, so the 10/15/20-bin sensitivity analysis should be considered alongside the proper scoring rules.
+Balanced-prior reminder: these calibrated probabilities apply to the balanced evaluation design and are not automatically survey-population posterior probabilities under different class prevalences.
