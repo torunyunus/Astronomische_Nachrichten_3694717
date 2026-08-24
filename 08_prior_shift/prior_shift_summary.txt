@@ -1,0 +1,19 @@
+SDSS DR17 CLASS-PREVALENCE / PRIOR-SHIFT SUMMARY
+==============================================================================
+
+The untouched final test set is deliberately balanced. Population-level metrics were therefore recomputed under alternative class priors using the observed class-conditional confusion rates.
+
+Published SDSS DR17 spectroscopic-reference prior used for sensitivity:
+- GALAXY=0.3725, STAR=0.3469, QSO=0.2807
+- This is a reference prevalence scenario, not a claim about the exact parent population of the present SQL query.
+
+F4 / Random Forest:
+- Original: accuracy=0.8946 [0.8910, 0.8979], macro-F1=0.8938 [0.8902, 0.8972], weighted-F1=0.8944 [0.8908, 0.8978]
+- Prior-adjusted: accuracy=0.8953 [0.8917, 0.8987], macro-F1=0.8945 [0.8909, 0.8979], weighted-F1=0.8951 [0.8915, 0.8985]
+
+F7 / LightGBM:
+- Original: accuracy=0.9862 [0.9849, 0.9875], macro-F1=0.9856 [0.9843, 0.9870], weighted-F1=0.9862 [0.9849, 0.9875]
+- Prior-adjusted: accuracy=0.9864 [0.9851, 0.9876], macro-F1=0.9858 [0.9845, 0.9871], weighted-F1=0.9864 [0.9851, 0.9876]
+
+Interpretation: balanced-test macro-F1 remains useful for class-symmetric model comparison, but accuracy, precision, weighted-F1, and probability interpretation depend on the target class prevalence.
+The prior-adjusted rule is presented only as a label-shift sensitivity diagnostic; it is not evidence of cross-survey transfer.
