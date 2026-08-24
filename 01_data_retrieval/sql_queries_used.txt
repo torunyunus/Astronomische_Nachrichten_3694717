@@ -1,4 +1,4 @@
-SDSS DR17 reviewer-revision randomized sampling queries
+SDSS DR17 randomized sampling queries
 Sampling mechanism: ORDER BY NEWID()
 NOTE: NEWID() is random and not seedable; archive the resulting CSV and object IDs for exact reproducibility.
 
