@@ -1,0 +1,8 @@
+configuration,features,contains_spectroscopic_redshift,description
+F1,redshift,yes,Spectroscopic redshift only
+F2,"u;g;r;i;z",no,Five SDSS magnitudes
+F3,"u-g;g-r;r-i;i-z;u-r;g-i;r-z",no,Seven colour indices
+F4,"u;g;r;i;z;u-g;g-r;r-i;i-z;u-r;g-i;r-z",no,Magnitudes and colours
+F5,"u;g;r;i;z;redshift",yes,Magnitudes and spectroscopic redshift
+F6,"u-g;g-r;r-i;i-z;u-r;g-i;r-z;redshift",yes,Colours and spectroscopic redshift
+F7,"u;g;r;i;z;u-g;g-r;r-i;i-z;u-r;g-i;r-z;redshift",yes,Full feature configuration
