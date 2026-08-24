@@ -6,8 +6,6 @@ Authors: Yunis Torun, Yiğit Ütük, and Serkan Akkoyun.
 
 Repository maintainer: Yunis Torun.
 
-
-
 ## Purpose
 
 This repository contains the analysis code and reproducibility material for the SDSS DR17 star–galaxy–quasar classification study. The analysis uses a randomized, class-balanced sample of 150,000 spectroscopically labelled SDSS DR17 sources (50,000 GALAXY, 50,000 STAR, and 50,000 QSO objects).
@@ -25,7 +23,7 @@ This repository contains the analysis code and reproducibility material for the 
 - `tables/` — machine-readable principal tables.
 - `supplementary/` — machine-readable supplementary analysis tables.
 - `figures/` — code for reproducing the principal and supplementary figures.
-- `environment/` — environment-export utility and reference dependency information.
+- `environment/` — exact Conda environment, complete package snapshot, and environment documentation.
 
 ## Core experimental design
 
@@ -58,7 +56,7 @@ SHA-256 checksums for both compressed and uncompressed forms are listed in `01_d
 
 ## Software environment
 
-Core dependencies are listed in `requirements-core.txt`. Reference versions are provided in `environment/requirements-reference.txt` and described in `environment/REFERENCE_ENVIRONMENT.md`. The PowerShell utility in `environment/export_environment.ps1` records the installed package versions and Conda environment directly from the analysis computer.
+The exact analysis environment is archived as `environment/environment.yml`, and the complete package snapshot is provided in `environment/requirements.txt`. Principal package versions are summarized in `environment/REFERENCE_ENVIRONMENT.md` and `environment/requirements-reference.txt`.
 
 ## Execution
 
