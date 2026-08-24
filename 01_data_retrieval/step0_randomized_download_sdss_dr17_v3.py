@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-# Maintainer: Yunis Torun ytorun@cumhuriyet.edu.tr
+# Maintainer: Yunis Torun
 """
 step0_randomized_download_sdss_dr17.py
 
-Reviewer-revision data download for:
+Data download for:
 "Reliability-Aware Star–Galaxy–Quasar Classification in SDSS DR17"
 
 Purpose
@@ -13,6 +13,10 @@ Replace the previous class-wise:
 sampling with SQL-level randomized sampling:
     SELECT TOP 50000 ... ORDER BY NEWID()
 
+The script also downloads SDSS photometric uncertainties
+(Err_u, Err_g, Err_r, Err_i, Err_z) for the downstream
+uncertainty analysis. These uncertainty columns are NOT automatically
+added to the original F1–F7 feature sets.
 
 Important
 ---------
@@ -43,7 +47,7 @@ RANDOM_STATE = 42
 MAG_MIN_SQL = 0
 MAG_MAX_SQL = 35
 
-OUT_DIR = Path("sdss_dr17_revision_random")
+OUT_DIR = Path("sdss_dr17_random_sample")
 OUT_DIR.mkdir(parents=True, exist_ok=True)
 
 FINAL_CSV = OUT_DIR / "sdss_dr17_randomized_150k.csv"
@@ -55,6 +59,12 @@ MAX_RETRIES = 3
 
 
 def build_query(class_name: str) -> str:
+    """
+    Randomly retrieve up to ROWS_PER_CLASS eligible sources for one class.
+
+    NEWID() performs SQL-level random ordering, directly addressing the
+    sampling concern associated with TOP N ordered by objID.
+    """
     return f"""
 SELECT TOP {ROWS_PER_CLASS}
     p.objID                 AS objid,
@@ -183,7 +193,7 @@ def clean_class_frame(df: pd.DataFrame, requested_class: str) -> pd.DataFrame:
 
 def main() -> None:
     print("=" * 72)
-    print("SDSS DR17 randomized reviewer-revision download")
+    print("SDSS DR17 randomized download")
     print("=" * 72)
     print(f"Target: {ROWS_PER_CLASS:,} rows per class")
     print(f"Classes: {', '.join(CLASSES)}")
@@ -227,7 +237,7 @@ def main() -> None:
     full.to_csv(FINAL_CSV, index=False)
     QUERY_LOG.write_text(
         (
-            "SDSS DR17 reviewer-revision randomized sampling queries\n"
+            "SDSS DR17 randomized sampling queries\n"
             "Sampling mechanism: ORDER BY NEWID()\n"
             "NOTE: NEWID() is random and not seedable; archive the resulting "
             "CSV and object IDs for exact reproducibility.\n"
@@ -263,6 +273,8 @@ def main() -> None:
     print(f"Final dataset : {FINAL_CSV}")
     print(f"SQL log       : {QUERY_LOG}")
     print(f"Summary       : {SUMMARY_JSON}")
+    print("\nNext analysis step:")
+    print("Compare old vs randomized samples in r, redshift, RA/Dec, and class support.")
 
 
 if __name__ == "__main__":
