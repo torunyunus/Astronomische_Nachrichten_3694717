@@ -63,10 +63,19 @@ def figure_3():
             marker="o", capsize=3, label=label,
         )
 
+    counts = (
+        df[(df["feature_configuration"] == "F4") & (df["model"] == "Random Forest")]
+        .sort_values("r_bin_id")
+    )
+    xlabels = [
+        f"Q{int(r.r_bin_id)}\nG={int(r.galaxy_n)} S={int(r.star_n)} Q={int(r.qso_n)}"
+        for r in counts.itertuples()
+    ]
+
     for ax in axes:
         ax.set_xticks(range(1, 6))
-        ax.set_xticklabels(["Q1", "Q2", "Q3", "Q4", "Q5"])
-        ax.set_xlabel("r-band magnitude bin")
+        ax.set_xticklabels(xlabels, fontsize=8)
+        ax.set_xlabel("r-band magnitude bin and class counts")
         ax.set_ylim(0.45, 1.02)
         ax.legend(frameon=False)
     axes[0].set_ylabel("Macro-F1")
@@ -84,7 +93,11 @@ def figure_4():
     df = pd.read_csv(path)
     fig, axes = plt.subplots(1, 2, figsize=(12, 6.75))
 
-    for ax, config, title in zip(axes, ["F4", "F7"], ["(a) F4 Random Forest", "(b) F7 LightGBM"]):
+    for ax, config, title in zip(
+        axes,
+        ["F4", "F7"],
+        ["(a) F4 Random Forest", "(b) F7 LightGBM"],
+    ):
         for method in ["Raw", "Sigmoid", "Isotonic"]:
             d = df[(df["feature_configuration"] == config) & (df["method"] == method)].copy()
             d = d[d["n"] > 0].sort_values("bin_id")
@@ -133,12 +146,41 @@ def figure_5():
     plt.close(fig)
 
 
+def supplementary_figure_s1():
+    path = ROOT / "04_magnitude_robustness" / "class_conditional_recall_results.csv"
+    df = pd.read_csv(path)
+    stars = df[df["true_class"] == "STAR"].copy()
+
+    fig, ax = plt.subplots(figsize=(8.5, 5.2))
+    for config, model in [("F4", "Random Forest"), ("F7", "LightGBM")]:
+        d = stars[(stars["feature_configuration"] == config) & (stars["model"] == model)].sort_values("class_r_bin_id")
+        ax.errorbar(
+            d["class_r_bin_id"], d["recall"],
+            yerr=np.vstack([
+                d["recall"] - d["recall_ci95_low"],
+                d["recall_ci95_high"] - d["recall"],
+            ]),
+            marker="o", capsize=3, label=f"{config} {model}",
+        )
+    ax.set_xticks(range(1, 6))
+    ax.set_xticklabels(["Q1", "Q2", "Q3", "Q4", "Q5"])
+    ax.set_xlabel("STAR class-conditional r-band magnitude bin")
+    ax.set_ylabel("STAR recall")
+    ax.set_ylim(0.35, 1.02)
+    ax.legend(frameon=False)
+    fig.tight_layout()
+    fig.savefig(OUT / "Supplementary_Figure_S1_STAR_class_conditional_recall.png", dpi=300)
+    fig.savefig(OUT / "Supplementary_Figure_S1_STAR_class_conditional_recall.pdf")
+    plt.close(fig)
+
+
 def main():
     OUT.mkdir(parents=True, exist_ok=True)
     figure_1()
     figure_3()
     figure_4()
     figure_5()
+    supplementary_figure_s1()
 
 
 if __name__ == "__main__":
