@@ -1,5 +1,4 @@
 # Maintainer: Yunis Torun
-# Analysis period: 17-24 August 2026
 
 from __future__ import annotations
 
