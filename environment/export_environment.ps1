@@ -1,5 +1,4 @@
 # Maintainer: Yunis Torun
-# Analysis period: 17-24 August 2026
 
 $PythonExe = "C:\Users\Kapsam\.conda\envs\astro_scie\python.exe"
 $OutDir = $PSScriptRoot
