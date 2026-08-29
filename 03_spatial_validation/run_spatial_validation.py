@@ -1,4 +1,4 @@
-# Maintainer: Yunis Torun
+# Maintainer: Y.Torun, ytorun@cumhuriyet.edu.tr
 
 from __future__ import annotations
 
