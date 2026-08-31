@@ -20,9 +20,9 @@ This repository contains the analysis code and reproducibility material for the 
 - `06_grouped_permutation/` — grouped permutation importance.
 - `07_probability_calibration/` — raw, sigmoid, and isotonic probability calibration.
 - `08_prior_shift/` — class-prevalence and label-shift sensitivity analysis.
-- `tables/` — machine-readable principal tables.
-- `supplementary/` — machine-readable supplementary analysis tables.
-- `figures/` — code for reproducing the principal and supplementary figures.
+- `tables/` — manuscript-aligned machine-readable Tables 1–8 and final-test confusion matrices.
+- `supplementary/` — machine-readable Supplementary Tables S1–S4.
+- `figures/` — code for reproducing manuscript Figures 1–5 and the supplementary figure.
 - `environment/` — exact Conda environment, complete package snapshot, and environment documentation.
 
 ## Core experimental design
@@ -34,7 +34,30 @@ Model and feature-configuration comparison is performed only within the developm
 - **F4 Random Forest** — redshift-free photometric configuration (magnitudes + colours).
 - **F7 LightGBM** — full spectroscopic-reference configuration (magnitudes + colours + spectroscopic redshift).
 
+The selected models are serialized after fitting to the complete development set and are reused by the downstream final-test reliability analyses so that magnitude robustness, photometric-uncertainty analysis, grouped permutation importance, probability calibration, and prevalence sensitivity refer to the same fixed representative models.
+
 The detailed experimental protocol is documented in `ANALYSIS_PROTOCOL.md`.
+
+## Manuscript table and figure mapping
+
+Principal table files in `tables/` follow the final manuscript numbering exactly:
+
+- Table 1 — feature configurations
+- Table 2 — model hyperparameters
+- Table 3 — repeated-CV macro-F1 comparison
+- Table 4 — development-selected classifier per feature configuration
+- Table 5 — untouched final-test performance
+- Table 6 — magnitude robustness
+- Table 7 — probability calibration
+- Table 8 — grouped permutation importance
+
+`figures/generate_figures.py` follows the final manuscript figure numbering exactly:
+
+- Figure 1 — repeated-development-validation macro-F1 heatmap
+- Figure 2 — final-test confusion matrices
+- Figure 3 — magnitude-dependent robustness
+- Figure 4 — probability-calibration reliability curves
+- Figure 5 — grouped permutation importance
 
 ## Randomized SQL retrieval and archived sample
 
@@ -60,7 +83,7 @@ The exact analysis environment is archived as `environment/environment.yml`, and
 
 ## Execution
 
-`RUN_ORDER.md` lists the commands for the complete analysis workflow. The archived `.csv.gz` files can be read directly by the analysis scripts. Figure-generation code is available in `figures/generate_figures.py`.
+`RUN_ORDER.md` lists the commands for the complete analysis workflow, including the fixed-model arguments required by downstream reliability analyses. The archived `.csv.gz` files can be read directly by the analysis scripts. Figure-generation code is available in `figures/generate_figures.py`.
 
 ## Citation
 
