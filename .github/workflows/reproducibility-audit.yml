@@ -4,7 +4,18 @@ on:
   push:
     paths:
       - '.github/workflows/reproducibility-audit.yml'
-      - 'audit/verify_manuscript_outputs.py'
+      - 'analysis_common.py'
+      - '01_data_retrieval/**'
+      - '02_validation/**'
+      - '03_spatial_validation/**'
+      - '04_magnitude_robustness/**'
+      - '05_photometric_uncertainty/**'
+      - '06_grouped_permutation/**'
+      - '07_probability_calibration/**'
+      - '08_prior_shift/**'
+      - 'figures/**'
+      - 'audit/**'
+      - 'environment/requirements-reference.txt'
   workflow_dispatch:
 
 jobs:
@@ -29,6 +40,12 @@ jobs:
           pip install -r environment/requirements-reference.txt
           python --version
           pip freeze | grep -E '^(numpy|pandas|scipy|scikit-learn|lightgbm|matplotlib|joblib|requests)=='
+
+      - name: Verify repository import path
+        run: |
+          echo "GITHUB_WORKSPACE=$GITHUB_WORKSPACE"
+          echo "PYTHONPATH=$PYTHONPATH"
+          python -c "import analysis_common; print('analysis_common import: PASS')"
 
       - name: 1 Validate archived data
         run: python 01_data_retrieval/validate_data_archive.py --data 01_data_retrieval/data/sdss_dr17_randomized_150k.csv.gz --ids 01_data_retrieval/data/randomized_object_ids.csv.gz
