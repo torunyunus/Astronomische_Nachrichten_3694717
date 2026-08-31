@@ -4,15 +4,20 @@ from __future__ import annotations
 
 import argparse
 from pathlib import Path
+
+import joblib
 import numpy as np
 import pandas as pd
 from sklearn.metrics import confusion_matrix
 from sklearn.model_selection import train_test_split
 
-from analysis_common import RANDOM_STATE, prepare_dataframe, make_model
+from analysis_common import RANDOM_STATE, prepare_dataframe
 
 BALANCED_PRIOR = np.array([1 / 3, 1 / 3, 1 / 3], dtype=float)
-SDSS_REFERENCE_PRIOR = np.array([0.3724535025530711, 0.34686081192418167, 0.28068568552274725], dtype=float)
+SDSS_REFERENCE_PRIOR = np.array(
+    [0.3724535025530711, 0.34686081192418167, 0.28068568552274725],
+    dtype=float,
+)
 
 
 def normalize_rows(p):
@@ -43,7 +48,12 @@ def metrics_from_cm(cm):
     total = cm.sum()
     precision = np.divide(tp, predicted, out=np.zeros(3), where=predicted > 0)
     recall = np.divide(tp, support, out=np.zeros(3), where=support > 0)
-    f1 = np.divide(2 * precision * recall, precision + recall, out=np.zeros(3), where=(precision + recall) > 0)
+    f1 = np.divide(
+        2 * precision * recall,
+        precision + recall,
+        out=np.zeros(3),
+        where=(precision + recall) > 0,
+    )
     accuracy = tp.sum() / total
     macro_f1 = f1.mean()
     weighted_f1 = np.sum(f1 * support) / support.sum()
@@ -91,7 +101,18 @@ def bootstrap_population(cm_counts, priors, n_boot=2000, seed=42):
     }
 
 
-def evaluate_scenario(config, model_name, y, pred, proba, scenario, priors, decision_rule, n_boot, seed):
+def evaluate_scenario(
+    config,
+    model_name,
+    y,
+    pred,
+    proba,
+    scenario,
+    priors,
+    decision_rule,
+    n_boot,
+    seed,
+):
     if decision_rule == "Prior-adjusted":
         pred_eval = np.argmax(prior_adjust_probabilities(proba, priors), axis=1)
     else:
@@ -118,6 +139,8 @@ def evaluate_scenario(config, model_name, y, pred, proba, scenario, priors, deci
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--data", required=True)
+    ap.add_argument("--f4-model", required=True, help="Fixed F4 model from validation stage")
+    ap.add_argument("--f7-model", required=True, help="Fixed F7 model from validation stage")
     ap.add_argument("--out", default="prior_shift_output")
     ap.add_argument("--bootstrap", type=int, default=2000)
     args = ap.parse_args()
@@ -126,15 +149,15 @@ def main():
     out.mkdir(parents=True, exist_ok=True)
 
     df, fs = prepare_dataframe(pd.read_csv(args.data))
-    dev, test = train_test_split(
+    _, test = train_test_split(
         df, test_size=0.20, stratify=df["target"], random_state=RANDOM_STATE
     )
-    dev, test = dev.reset_index(drop=True), test.reset_index(drop=True)
+    test = test.reset_index(drop=True)
     y = test["target"].to_numpy()
 
     selected = {
-        "F4": ("F4 Mag+Colors", "Random Forest"),
-        "F7": ("F7 Full", "LightGBM"),
+        "F4": ("F4 Mag+Colors", "Random Forest", joblib.load(args.f4_model)),
+        "F7": ("F7 Full", "LightGBM", joblib.load(args.f7_model)),
     }
     scenarios = [
         ("Balanced study prior", BALANCED_PRIOR),
@@ -142,21 +165,33 @@ def main():
     ]
     rows = []
 
-    for config, (fs_name, model_name) in selected.items():
-        model = make_model(model_name)
-        model.fit(dev[fs[fs_name]].to_numpy(dtype=float), dev["target"].to_numpy())
+    for config, (fs_name, model_name, model) in selected.items():
         Xt = test[fs[fs_name]].to_numpy(dtype=float)
         pred = model.predict(Xt)
         proba = model.predict_proba(Xt)
         for sidx, (scenario, priors) in enumerate(scenarios):
             for ridx, rule in enumerate(["Original", "Prior-adjusted"]):
-                rows.append(evaluate_scenario(
-                    config, model_name, y, pred, proba, scenario, priors, rule,
-                    args.bootstrap,
-                    RANDOM_STATE + sidx * 1000 + ridx * 100 + (10000 if config == "F7" else 0),
-                ))
+                rows.append(
+                    evaluate_scenario(
+                        config,
+                        model_name,
+                        y,
+                        pred,
+                        proba,
+                        scenario,
+                        priors,
+                        rule,
+                        args.bootstrap,
+                        RANDOM_STATE
+                        + sidx * 1000
+                        + ridx * 100
+                        + (10000 if config == "F7" else 0),
+                    )
+                )
 
-    pd.DataFrame(rows).to_csv(out / "prior_shift_results.csv", index=False)
+    results = pd.DataFrame(rows)
+    results.to_csv(out / "prior_shift_results.csv", index=False)
+    results.to_csv(out / "Supplementary_Table_S4_prevalence_sensitivity.csv", index=False)
 
 
 if __name__ == "__main__":
