@@ -1,0 +1,8 @@
+Feature set,Input features,Number of features
+F1,Spectroscopic redshift,1
+F2,"u, g, r, i, z",5
+F3,"u-g, g-r, r-i, i-z, u-r, g-i, r-z",7
+F4,"u, g, r, i, z and all color indices",12
+F5,"u, g, r, i, z and spectroscopic redshift",6
+F6,"all color indices and spectroscopic redshift",8
+F7,"u, g, r, i, z, all color indices, and spectroscopic redshift",13
