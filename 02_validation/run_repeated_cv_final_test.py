@@ -4,16 +4,16 @@ from __future__ import annotations
 
 import argparse
 from pathlib import Path
+
 import joblib
 import numpy as np
 import pandas as pd
-from sklearn.base import clone
 from sklearn.metrics import (
     accuracy_score,
+    confusion_matrix,
     f1_score,
     matthews_corrcoef,
     roc_auc_score,
-    confusion_matrix,
 )
 from sklearn.model_selection import RepeatedStratifiedKFold, train_test_split
 
@@ -37,10 +37,71 @@ def stratified_bootstrap_ci(y_true, y_pred, proba=None, n_boot=2000, seed=42):
             matthews_corrcoef(yt, yp),
         ]
         if proba is not None:
-            row.append(roc_auc_score(yt, proba[idx], multi_class="ovr", average="macro"))
+            row.append(
+                roc_auc_score(yt, proba[idx], multi_class="ovr", average="macro")
+            )
         rows.append(row)
     a = np.asarray(rows)
     return np.quantile(a, [0.025, 0.975], axis=0)
+
+
+def write_manuscript_tables(out: Path, summary: pd.DataFrame, final_df: pd.DataFrame) -> None:
+    feature_order = list(summary["feature_configuration"].drop_duplicates())
+
+    table3 = summary.pivot(
+        index="feature_configuration",
+        columns="model",
+        values=["macro_f1_mean", "macro_f1_sd"],
+    )
+    rows = []
+    for feature in feature_order:
+        row = {"feature_configuration": feature}
+        for model in MODEL_ORDER:
+            mean = table3.loc[feature, ("macro_f1_mean", model)]
+            sd = table3.loc[feature, ("macro_f1_sd", model)]
+            row[model] = f"{mean:.4f} ± {sd:.4f}"
+        rows.append(row)
+    pd.DataFrame(rows).to_csv(
+        out / "Table_3_repeated_CV_macroF1_mean_sd.csv", index=False
+    )
+
+    best_idx = summary.groupby("feature_configuration")["macro_f1_mean"].idxmax()
+    table4 = summary.loc[
+        best_idx,
+        ["feature_configuration", "model", "macro_f1_mean", "macro_f1_sd"],
+    ].copy()
+    table4["macro_f1_mean_sd"] = table4.apply(
+        lambda r: f"{r['macro_f1_mean']:.4f} ± {r['macro_f1_sd']:.4f}", axis=1
+    )
+    table4 = table4[
+        ["feature_configuration", "model", "macro_f1_mean_sd"]
+    ].rename(
+        columns={
+            "feature_configuration": "Feature",
+            "model": "CV-selected model",
+            "macro_f1_mean_sd": "Macro-F1 mean ± SD",
+        }
+    )
+    table4.to_csv(out / "Table_4_highest_mean_CV_model.csv", index=False)
+
+    table5 = final_df.copy()
+    table5["Configuration"] = table5["feature_configuration"].str.extract(r"^(F\d)")
+    table5["95% CI"] = table5.apply(
+        lambda r: f"{r['macro_f1_ci95_low']:.4f}–{r['macro_f1_ci95_high']:.4f}",
+        axis=1,
+    )
+    table5 = table5[
+        ["Configuration", "model", "accuracy", "macro_f1", "95% CI", "mcc", "auc_macro_ovr"]
+    ].rename(
+        columns={
+            "model": "Model",
+            "accuracy": "Accuracy",
+            "macro_f1": "Macro-F1",
+            "mcc": "MCC",
+            "auc_macro_ovr": "AUC",
+        }
+    )
+    table5.to_csv(out / "Table_5_final_test_performance.csv", index=False)
 
 
 def main():
@@ -66,35 +127,39 @@ def main():
         dev.assign(split="development"),
         test.assign(split="final_test"),
     ], ignore_index=True)
-    id_cols = [c for c in ["objid", "specobjid", "class", "split"] if c in split_map.columns]
+    id_cols = [
+        c for c in ["objid", "specobjid", "class", "split"] if c in split_map.columns
+    ]
     split_map[id_cols].to_csv(out / "split_assignment.csv", index=False)
 
-    cv = RepeatedStratifiedKFold(n_splits=5, n_repeats=3, random_state=RANDOM_STATE)
+    cv = RepeatedStratifiedKFold(
+        n_splits=5, n_repeats=3, random_state=RANDOM_STATE
+    )
     cv_rows = []
 
     for fs_name, cols in feature_sets.items():
         X = dev[cols].to_numpy(dtype=float)
         y = dev["target"].to_numpy()
         for model_name in MODEL_ORDER:
-            fold_scores = []
             for fold_id, (tr, va) in enumerate(cv.split(X, y), start=1):
                 model = make_model(model_name)
                 model.fit(X[tr], y[tr])
                 pred = model.predict(X[va])
-                score = f1_score(y[va], pred, average="macro")
-                fold_scores.append(score)
                 cv_rows.append({
                     "feature_configuration": fs_name,
                     "model": model_name,
                     "fold": fold_id,
-                    "macro_f1": score,
+                    "macro_f1": f1_score(y[va], pred, average="macro"),
                 })
 
     cv_df = pd.DataFrame(cv_rows)
     cv_df.to_csv(out / "repeated_cv_fold_scores.csv", index=False)
     summary = (
         cv_df.groupby(["feature_configuration", "model"], as_index=False)
-        .agg(macro_f1_mean=("macro_f1", "mean"), macro_f1_sd=("macro_f1", "std"))
+        .agg(
+            macro_f1_mean=("macro_f1", "mean"),
+            macro_f1_sd=("macro_f1", "std"),
+        )
     )
     summary.to_csv(out / "repeated_cv_summary.csv", index=False)
 
@@ -117,7 +182,9 @@ def main():
         mf1 = f1_score(y_test, pred, average="macro")
         mcc = matthews_corrcoef(y_test, pred)
         auc = roc_auc_score(y_test, proba, multi_class="ovr", average="macro")
-        ci = stratified_bootstrap_ci(y_test, pred, proba, n_boot=2000, seed=RANDOM_STATE)
+        ci = stratified_bootstrap_ci(
+            y_test, pred, proba, n_boot=2000, seed=RANDOM_STATE
+        )
 
         final_rows.append({
             "feature_configuration": fs_name,
@@ -137,9 +204,13 @@ def main():
         })
 
         tag = "F4" if fs_name.startswith("F4") else "F7"
-        pd.DataFrame(confusion_matrix(y_test, pred)).to_csv(
-            out / f"{tag}_final_test_confusion_matrix.csv", index=False, header=False
-        )
+        cm = confusion_matrix(y_test, pred)
+        pd.DataFrame(
+            cm,
+            index=["true_GALAXY", "true_STAR", "true_QSO"],
+            columns=["pred_GALAXY", "pred_STAR", "pred_QSO"],
+        ).to_csv(out / f"{tag}_final_test_confusion_matrix.csv")
+
         joblib.dump(model, out / f"{tag}_selected_model.joblib")
         np.savez_compressed(
             out / f"{tag}_final_test_predictions.npz",
@@ -148,7 +219,9 @@ def main():
             proba=proba,
         )
 
-    pd.DataFrame(final_rows).to_csv(out / "untouched_final_test_results_F4_F7.csv", index=False)
+    final_df = pd.DataFrame(final_rows)
+    final_df.to_csv(out / "untouched_final_test_results_F4_F7.csv", index=False)
+    write_manuscript_tables(out, summary, final_df)
 
 
 if __name__ == "__main__":
