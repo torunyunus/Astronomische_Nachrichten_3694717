@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 from pathlib import Path
+
 import joblib
 import numpy as np
 import pandas as pd
@@ -13,17 +14,28 @@ from sklearn.model_selection import train_test_split
 from analysis_common import RANDOM_STATE, prepare_dataframe
 
 
-def grouped_permutation(model, X: pd.DataFrame, y: np.ndarray, groups: dict, n_perm=100, seed=42):
+def grouped_permutation(
+    model,
+    X: pd.DataFrame,
+    y: np.ndarray,
+    groups: dict,
+    n_perm=100,
+    seed=42,
+):
     rng = np.random.default_rng(seed)
-    baseline = f1_score(y, model.predict(X.to_numpy(dtype=float)), average="macro")
+    baseline = f1_score(
+        y, model.predict(X.to_numpy(dtype=float)), average="macro"
+    )
     rows = []
     for group_name, cols in groups.items():
         drops = []
-        for p in range(n_perm):
+        for _ in range(n_perm):
             order = rng.permutation(len(X))
             Xp = X.copy()
             Xp.loc[:, cols] = X.iloc[order][cols].to_numpy()
-            score = f1_score(y, model.predict(Xp.to_numpy(dtype=float)), average="macro")
+            score = f1_score(
+                y, model.predict(Xp.to_numpy(dtype=float)), average="macro"
+            )
             drops.append(baseline - score)
         a = np.asarray(drops)
         rows.append({
@@ -37,6 +49,43 @@ def grouped_permutation(model, X: pd.DataFrame, y: np.ndarray, groups: dict, n_p
             "n_permutations": n_perm,
         })
     return pd.DataFrame(rows)
+
+
+def write_table_8(out: Path, results: pd.DataFrame) -> None:
+    table = results[
+        [
+            "feature_configuration",
+            "model",
+            "group",
+            "mean_delta_macro_f1",
+            "sd_delta_macro_f1",
+            "q025_delta_macro_f1",
+            "q975_delta_macro_f1",
+        ]
+    ].copy()
+    table["95% permutation interval"] = table.apply(
+        lambda r: f"{r['q025_delta_macro_f1']:.4f}–{r['q975_delta_macro_f1']:.4f}",
+        axis=1,
+    )
+    table = table[
+        [
+            "feature_configuration",
+            "model",
+            "group",
+            "mean_delta_macro_f1",
+            "sd_delta_macro_f1",
+            "95% permutation interval",
+        ]
+    ].rename(
+        columns={
+            "feature_configuration": "Feature configuration",
+            "model": "Model",
+            "group": "Feature group",
+            "mean_delta_macro_f1": "ΔMacro-F1 mean",
+            "sd_delta_macro_f1": "SD",
+        }
+    )
+    table.to_csv(out / "Table_8_grouped_permutation_importance.csv", index=False)
 
 
 def main():
@@ -70,7 +119,7 @@ def main():
         {
             "Magnitude group": mags,
             "Color group": colors,
-            "Full photometric block": mags + colors,
+            "Photometric block": mags + colors,
         },
         n_perm=100,
         seed=RANDOM_STATE,
@@ -85,8 +134,8 @@ def main():
         {
             "Magnitude group": mags,
             "Color group": colors,
-            "Full photometric block": mags + colors,
-            "Redshift": ["redshift"],
+            "Photometric block": mags + colors,
+            "Spectroscopic redshift": ["redshift"],
         },
         n_perm=100,
         seed=RANDOM_STATE,
@@ -94,9 +143,9 @@ def main():
     r7.insert(0, "feature_configuration", "F7")
     r7.insert(1, "model", "LightGBM")
 
-    pd.concat([r4, r7], ignore_index=True).to_csv(
-        out / "grouped_permutation_summary.csv", index=False
-    )
+    results = pd.concat([r4, r7], ignore_index=True)
+    results.to_csv(out / "grouped_permutation_summary.csv", index=False)
+    write_table_8(out, results)
 
 
 if __name__ == "__main__":
