@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import argparse
 from pathlib import Path
+
+import joblib
 import numpy as np
 import pandas as pd
 from sklearn.base import clone
@@ -123,7 +125,9 @@ def apply_sigmoid(maps, p):
 def fit_isotonic_maps(oof, y):
     maps = []
     for k in range(3):
-        iso = IsotonicRegression(y_min=0.0, y_max=1.0, increasing=True, out_of_bounds="clip")
+        iso = IsotonicRegression(
+            y_min=0.0, y_max=1.0, increasing=True, out_of_bounds="clip"
+        )
         iso.fit(oof[:, k], (y == k).astype(float))
         maps.append(iso)
     return maps
@@ -180,32 +184,63 @@ def reliability_rows(config, method, y, p, n_bins=15):
     pred = np.argmax(p, axis=1)
     conf = np.max(p, axis=1)
     correct = pred == y
-    edges = np.linspace(0, 1, n_bins + 1)
+    edges = np.linspace(0.0, 1.0, n_bins + 1)
     bid = np.clip(np.searchsorted(edges, conf, side="right") - 1, 0, n_bins - 1)
     rows = []
     for b in range(n_bins):
         m = bid == b
         n = int(m.sum())
-        if n == 0:
-            continue
-        s = int(correct[m].sum())
-        lo, hi = wilson(s, n)
+        if n:
+            s = int(correct[m].sum())
+            lo, hi = wilson(s, n)
+            mean_confidence = float(conf[m].mean())
+            empirical_accuracy = float(correct[m].mean())
+        else:
+            lo = hi = mean_confidence = empirical_accuracy = np.nan
         rows.append({
             "feature_configuration": config,
             "method": method,
-            "bin": b + 1,
+            "n_bins": n_bins,
+            "bin_id": b + 1,
+            "bin_lower": edges[b],
+            "bin_upper": edges[b + 1],
             "n": n,
-            "mean_confidence": float(conf[m].mean()),
-            "empirical_accuracy": float(correct[m].mean()),
-            "wilson_ci95_low": lo,
-            "wilson_ci95_high": hi,
+            "mean_confidence": mean_confidence,
+            "empirical_accuracy": empirical_accuracy,
+            "accuracy_ci95_low": lo,
+            "accuracy_ci95_high": hi,
         })
     return rows
+
+
+def write_table_7(out: Path, results: pd.DataFrame) -> None:
+    rows = []
+    for r in results.itertuples(index=False):
+        rows.append({
+            "Configuration": r.feature_configuration,
+            "Model": r.model,
+            "Method": r.method,
+            "Macro-F1": f"{r.macro_f1:.4f}",
+            "Log loss (95% CI)": (
+                f"{r.log_loss:.4f} ({r.log_loss_ci95_low:.4f}–{r.log_loss_ci95_high:.4f})"
+            ),
+            "Brier score (95% CI)": (
+                f"{r.brier_score:.4f} ({r.brier_score_ci95_low:.4f}–{r.brier_score_ci95_high:.4f})"
+            ),
+            "ECE15 (95% CI)": (
+                f"{r.ece_15:.4f} ({r.ece_15_ci95_low:.4f}–{r.ece_15_ci95_high:.4f})"
+            ),
+            "ECE10": f"{r.ece_10:.4f}",
+            "ECE20": f"{r.ece_20:.4f}",
+        })
+    pd.DataFrame(rows).to_csv(out / "Table_7_probability_calibration.csv", index=False)
 
 
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--data", required=True)
+    ap.add_argument("--f4-model", required=True, help="Fixed F4 model from validation stage")
+    ap.add_argument("--f7-model", required=True, help="Fixed F7 model from validation stage")
     ap.add_argument("--out", default="probability_calibration_output")
     ap.add_argument("--bootstrap", type=int, default=2000)
     args = ap.parse_args()
@@ -220,14 +255,14 @@ def main():
     dev, test = dev.reset_index(drop=True), test.reset_index(drop=True)
 
     selected = {
-        "F4": ("F4 Mag+Colors", "Random Forest"),
-        "F7": ("F7 Full", "LightGBM"),
+        "F4": ("F4 Mag+Colors", "Random Forest", args.f4_model),
+        "F7": ("F7 Full", "LightGBM", args.f7_model),
     }
     result_rows = []
     ece_rows = []
     curve_rows = []
 
-    for config, (fs_name, model_name) in selected.items():
+    for config, (fs_name, model_name, model_path) in selected.items():
         Xd = dev[fs[fs_name]].to_numpy(dtype=float)
         yd = dev["target"].to_numpy()
         Xt = test[fs[fs_name]].to_numpy(dtype=float)
@@ -238,20 +273,31 @@ def main():
         sigmoid = fit_sigmoid_maps(oof, yd)
         isotonic = fit_isotonic_maps(oof, yd)
 
-        final_model = make_model(model_name)
-        final_model.fit(Xd, yd)
+        final_model = joblib.load(model_path)
         raw = normalize_rows(final_model.predict_proba(Xt))
         probs = {
             "Raw": raw,
             "Sigmoid": apply_sigmoid(sigmoid, raw),
             "Isotonic": apply_isotonic(isotonic, raw),
         }
-        ci = bootstrap_ci(yt, probs, args.bootstrap, RANDOM_STATE + (100000 if config == "F7" else 0))
+        ci = bootstrap_ci(
+            yt,
+            probs,
+            args.bootstrap,
+            RANDOM_STATE + (100000 if config == "F7" else 0),
+        )
 
         for method, p in probs.items():
             met = metrics(yt, p)
-            row = {"feature_configuration": config, "model": model_name, "method": method, **met}
-            for metric_name in ["log_loss", "brier_score", "ece_15", "accuracy", "macro_f1"]:
+            row = {
+                "feature_configuration": config,
+                "model": model_name,
+                "method": method,
+                **met,
+            }
+            for metric_name in [
+                "log_loss", "brier_score", "ece_15", "accuracy", "macro_f1"
+            ]:
                 row[f"{metric_name}_ci95_low"] = ci[method][metric_name][0]
                 row[f"{metric_name}_ci95_high"] = ci[method][metric_name][1]
             result_rows.append(row)
@@ -265,9 +311,11 @@ def main():
             })
             curve_rows.extend(reliability_rows(config, method, yt, p, 15))
 
-    pd.DataFrame(result_rows).to_csv(out / "calibration_results.csv", index=False)
+    results = pd.DataFrame(result_rows)
+    results.to_csv(out / "calibration_results.csv", index=False)
     pd.DataFrame(ece_rows).to_csv(out / "ece_sensitivity.csv", index=False)
     pd.DataFrame(curve_rows).to_csv(out / "reliability_curve_data.csv", index=False)
+    write_table_7(out, results)
 
 
 if __name__ == "__main__":
