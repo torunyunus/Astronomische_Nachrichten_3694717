@@ -1,8 +1,0 @@
-Feature configuration,Model,Feature group,ΔMacro-F1 mean,SD,95% permutation interval
-F4,Random Forest,Magnitude group,0.1543,0.0019,0.1509–0.1581
-F4,Random Forest,Color group,0.5301,0.0027,0.5245–0.5340
-F4,Random Forest,Photometric block,0.5616,0.0026,0.5574–0.5668
-F7,LightGBM,Magnitude group,0.0157,0.0006,0.0146–0.0169
-F7,LightGBM,Color group,0.0947,0.0012,0.0923–0.0970
-F7,LightGBM,Photometric block,0.1319,0.0016,0.1291–0.1353
-F7,LightGBM,Redshift,0.5836,0.0024,0.5794–0.5884
