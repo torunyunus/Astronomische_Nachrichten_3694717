@@ -1,0 +1,85 @@
+name: Reproducibility audit
+
+on:
+  push:
+    paths:
+      - '.github/workflows/reproducibility-audit.yml'
+  workflow_dispatch:
+
+jobs:
+  reproduce:
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements-core.txt
+
+      - name: 1 Validate archived data
+        run: python 01_data_retrieval/validate_data_archive.py --data 01_data_retrieval/data/sdss_dr17_randomized_150k.csv.gz --ids 01_data_retrieval/data/randomized_object_ids.csv.gz
+
+      - name: 2 Development validation and final-test evaluation
+        run: python 02_validation/run_repeated_cv_final_test.py --data 01_data_retrieval/data/sdss_dr17_randomized_150k.csv.gz --out validation_output
+
+      - name: 3 Spatial validation
+        run: python 03_spatial_validation/run_spatial_validation.py --data 01_data_retrieval/data/sdss_dr17_randomized_150k.csv.gz --out spatial_validation_output
+
+      - name: 4 Magnitude robustness
+        continue-on-error: true
+        run: python 04_magnitude_robustness/run_magnitude_robustness.py --data 01_data_retrieval/data/sdss_dr17_randomized_150k.csv.gz --f4-model validation_output/F4_selected_model.joblib --f7-model validation_output/F7_selected_model.joblib --out magnitude_robustness_output
+
+      - name: 5 Photometric-uncertainty analysis
+        continue-on-error: true
+        run: python 05_photometric_uncertainty/run_photometric_uncertainty.py --data 01_data_retrieval/data/sdss_dr17_randomized_150k.csv.gz --f4-model validation_output/F4_selected_model.joblib --f7-model validation_output/F7_selected_model.joblib --out photometric_uncertainty_output
+
+      - name: 6 Grouped permutation importance
+        continue-on-error: true
+        run: python 06_grouped_permutation/run_grouped_permutation.py --data 01_data_retrieval/data/sdss_dr17_randomized_150k.csv.gz --f4-model validation_output/F4_selected_model.joblib --f7-model validation_output/F7_selected_model.joblib --out grouped_permutation_output
+
+      - name: 7 Probability calibration
+        continue-on-error: true
+        run: python 07_probability_calibration/run_probability_calibration.py --data 01_data_retrieval/data/sdss_dr17_randomized_150k.csv.gz --f4-model validation_output/F4_selected_model.joblib --f7-model validation_output/F7_selected_model.joblib --out probability_calibration_output
+
+      - name: 8 Class-prevalence sensitivity
+        continue-on-error: true
+        run: python 08_prior_shift/run_prior_shift.py --data 01_data_retrieval/data/sdss_dr17_randomized_150k.csv.gz --f4-model validation_output/F4_selected_model.joblib --f7-model validation_output/F7_selected_model.joblib --out prior_shift_output
+
+      - name: Copy generated outputs into canonical paths for figure script
+        if: always()
+        run: |
+          cp validation_output/repeated_cv_summary.csv /tmp/repeated_cv_summary.csv 2>/dev/null || true
+          cp magnitude_robustness_output/magnitude_bin_results.csv 04_magnitude_robustness/magnitude_bin_results.csv 2>/dev/null || true
+          cp probability_calibration_output/reliability_curve_data.csv 07_probability_calibration/reliability_curve_data.csv 2>/dev/null || true
+          cp grouped_permutation_output/grouped_permutation_summary.csv /tmp/grouped_permutation_summary.csv 2>/dev/null || true
+
+      - name: 9 Figure generation
+        if: always()
+        continue-on-error: true
+        run: python figures/generate_figures.py
+
+      - name: Upload audit outputs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: reproducibility-audit-outputs
+          if-no-files-found: warn
+          path: |
+            validation_output/
+            spatial_validation_output/
+            magnitude_robustness_output/
+            photometric_uncertainty_output/
+            grouped_permutation_output/
+            probability_calibration_output/
+            prior_shift_output/
+            figures/*.png
+            figures/*.pdf
