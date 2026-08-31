@@ -4,12 +4,20 @@ from __future__ import annotations
 
 import argparse
 from pathlib import Path
+
+import joblib
 import numpy as np
 import pandas as pd
-from sklearn.metrics import accuracy_score, f1_score, matthews_corrcoef, recall_score, roc_auc_score
+from sklearn.metrics import (
+    accuracy_score,
+    f1_score,
+    matthews_corrcoef,
+    recall_score,
+    roc_auc_score,
+)
 from sklearn.model_selection import train_test_split
 
-from analysis_common import RANDOM_STATE, LABEL_MAP, prepare_dataframe, make_model
+from analysis_common import RANDOM_STATE, LABEL_MAP, prepare_dataframe
 
 
 def equal_count_bins(values, n_bins=5):
@@ -31,7 +39,9 @@ def bootstrap_multiclass(y, pred, n_boot=2000, seed=42):
             for c in classes
         ])
         yt, yp = y[idx], pred[idx]
-        rec = recall_score(yt, yp, labels=[0, 1, 2], average=None, zero_division=0)
+        rec = recall_score(
+            yt, yp, labels=[0, 1, 2], average=None, zero_division=0
+        )
         rows.append([
             accuracy_score(yt, yp),
             f1_score(yt, yp, average="macro", zero_division=0),
@@ -39,9 +49,7 @@ def bootstrap_multiclass(y, pred, n_boot=2000, seed=42):
             rec[0], rec[1], rec[2],
         ])
     a = np.asarray(rows)
-    lo = np.quantile(a, 0.025, axis=0)
-    hi = np.quantile(a, 0.975, axis=0)
-    return lo, hi
+    return np.quantile(a, 0.025, axis=0), np.quantile(a, 0.975, axis=0)
 
 
 def binary_recall_ci(correct, n_boot=2000, seed=42):
@@ -53,9 +61,23 @@ def binary_recall_ci(correct, n_boot=2000, seed=42):
     return float(np.quantile(vals, 0.025)), float(np.quantile(vals, 0.975))
 
 
+def write_table_6(out: Path, overall: pd.DataFrame) -> None:
+    cols = [
+        "feature_configuration", "model", "r_bin", "r_min", "r_max",
+        "galaxy_n", "star_n", "qso_n",
+        "macro_f1", "macro_f1_ci95_low", "macro_f1_ci95_high",
+        "recall_galaxy", "recall_galaxy_ci95_low", "recall_galaxy_ci95_high",
+        "recall_star", "recall_star_ci95_low", "recall_star_ci95_high",
+        "recall_qso", "recall_qso_ci95_low", "recall_qso_ci95_high",
+    ]
+    overall[cols].to_csv(out / "Table_6_magnitude_robustness.csv", index=False)
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--data", required=True)
+    ap.add_argument("--f4-model", required=True, help="Fixed F4 model from validation stage")
+    ap.add_argument("--f7-model", required=True, help="Fixed F7 model from validation stage")
     ap.add_argument("--out", default="magnitude_robustness_output")
     ap.add_argument("--bootstrap", type=int, default=2000)
     args = ap.parse_args()
@@ -64,23 +86,20 @@ def main():
     out.mkdir(parents=True, exist_ok=True)
 
     df, fs = prepare_dataframe(pd.read_csv(args.data))
-    dev, test = train_test_split(
+    _, test = train_test_split(
         df, test_size=0.20, stratify=df["target"], random_state=RANDOM_STATE
     )
-    dev = dev.reset_index(drop=True)
     test = test.reset_index(drop=True)
     test["r_bin_id"] = equal_count_bins(test["r"].to_numpy(), 5)
 
     selected = {
-        "F4": ("F4 Mag+Colors", "Random Forest"),
-        "F7": ("F7 Full", "LightGBM"),
+        "F4": ("F4 Mag+Colors", "Random Forest", joblib.load(args.f4_model)),
+        "F7": ("F7 Full", "LightGBM", joblib.load(args.f7_model)),
     }
     overall_rows = []
     class_rows = []
 
-    for tag, (fs_name, model_name) in selected.items():
-        model = make_model(model_name)
-        model.fit(dev[fs[fs_name]].to_numpy(dtype=float), dev["target"].to_numpy())
+    for tag, (fs_name, model_name, model) in selected.items():
         pred_all = model.predict(test[fs[fs_name]].to_numpy(dtype=float))
         proba_all = model.predict_proba(test[fs[fs_name]].to_numpy(dtype=float))
 
@@ -90,9 +109,14 @@ def main():
             y = d["target"].to_numpy()
             pred = pred_all[m]
             proba = proba_all[m]
-            rec = recall_score(y, pred, labels=[0, 1, 2], average=None, zero_division=0)
+            rec = recall_score(
+                y, pred, labels=[0, 1, 2], average=None, zero_division=0
+            )
             lo, hi = bootstrap_multiclass(
-                y, pred, n_boot=args.bootstrap, seed=RANDOM_STATE + bid + (100 if tag == "F7" else 0)
+                y,
+                pred,
+                n_boot=args.bootstrap,
+                seed=RANDOM_STATE + bid + (100 if tag == "F7" else 0),
             )
             counts = d["class"].value_counts()
             overall_rows.append({
@@ -111,7 +135,9 @@ def main():
                 "accuracy": accuracy_score(y, pred),
                 "macro_f1": f1_score(y, pred, average="macro", zero_division=0),
                 "mcc": matthews_corrcoef(y, pred),
-                "auc_macro_ovr": roc_auc_score(y, proba, multi_class="ovr", average="macro"),
+                "auc_macro_ovr": roc_auc_score(
+                    y, proba, multi_class="ovr", average="macro"
+                ),
                 "recall_galaxy": rec[0],
                 "recall_star": rec[1],
                 "recall_qso": rec[2],
@@ -137,7 +163,8 @@ def main():
                 idx = dc.loc[m, "index"].to_numpy(dtype=int)
                 correct = (pred_all[idx] == class_id).astype(float)
                 lo, hi = binary_recall_ci(
-                    correct, n_boot=args.bootstrap,
+                    correct,
+                    n_boot=args.bootstrap,
                     seed=RANDOM_STATE + class_id * 10 + bid + (100 if tag == "F7" else 0),
                 )
                 d = dc.loc[m]
@@ -157,12 +184,21 @@ def main():
                     "recall_ci95_high": hi,
                 })
 
-    pd.DataFrame(overall_rows).to_csv(out / "magnitude_bin_results.csv", index=False)
-    pd.DataFrame(class_rows).to_csv(out / "class_conditional_recall_results.csv", index=False)
+    overall = pd.DataFrame(overall_rows)
+    class_conditional = pd.DataFrame(class_rows)
+    overall.to_csv(out / "magnitude_bin_results.csv", index=False)
+    class_conditional.to_csv(out / "class_conditional_recall_results.csv", index=False)
+    write_table_6(out, overall)
 
     bins = (
         test.groupby("r_bin_id", as_index=False)
-        .agg(n=("r", "size"), r_min=("r", "min"), r_max=("r", "max"), r_mean=("r", "mean"), r_median=("r", "median"))
+        .agg(
+            n=("r", "size"),
+            r_min=("r", "min"),
+            r_max=("r", "max"),
+            r_mean=("r", "mean"),
+            r_median=("r", "median"),
+        )
     )
     bins["r_bin"] = "Q" + bins["r_bin_id"].astype(str)
     bins.to_csv(out / "magnitude_bin_definition.csv", index=False)
