@@ -84,8 +84,8 @@ jobs:
       - name: 9 Figure generation
         run: python figures/generate_figures.py
 
-      - name: Compare regenerated Tables 3-8 and Figure 1-5 with manuscript
-        run: python audit/verify_manuscript_outputs.py
+      - name: 10 Compare regenerated Tables 3-8 and Figure 1-5 with manuscript
+        run: python audit/run_reproducibility_audit.py
 
       - name: Upload audit outputs
         if: always()
